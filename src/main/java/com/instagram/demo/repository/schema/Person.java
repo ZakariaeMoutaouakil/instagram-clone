@@ -1,16 +1,14 @@
 package com.instagram.demo.repository.schema;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
+import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 import static jakarta.persistence.GenerationType.IDENTITY;
 
@@ -24,18 +22,36 @@ public class Person {
     @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
+    @NotNull
+    @Size(min = 1, max = 20)
+    @Column(unique = true)
     private String username;
 
+    @NotNull
+    @Email
+    @Column(unique = true)
+    private String email;
+
+    @NotNull
+    @Size(min = 1, max = 20)
+    private String password;
+
+    @NotNull
+    @Size(min = 1, max = 20)
     private String firstname;
 
+    @NotNull
+    @Size(min = 1, max = 20)
     private String lastname;
 
+    @NotNull
+    @Size(max = 140)
     private String bio;
 
     @OneToMany(mappedBy = "uploader")
     private Set<Post> uploads;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne(fetch = EAGER)
     private Post likedPost;
 
     @OneToMany(mappedBy = "author")

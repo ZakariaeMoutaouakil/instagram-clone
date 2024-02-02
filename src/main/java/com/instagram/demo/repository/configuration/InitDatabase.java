@@ -5,14 +5,14 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
+//@Configuration
 public class InitDatabase {
-    @Bean
-    CommandLineRunner initDatabase(PostRepository postRepository) {
-
-        return args -> {
-//            log.info("Preloading " + repository.save(new Employee("Bilbo Baggins", "burglar")));
-//            log.info("Preloading " + repository.save(new Employee("Frodo Baggins", "thief")));
-        };
-    }
+//    @Bean
+//    CommandLineRunner initDatabase(PostRepository postRepository) {
+//
+//        return args -> {
+////            log.info("Preloading " + repository.save(new Employee("Bilbo Baggins", "burglar")));
+////            log.info("Preloading " + repository.save(new Employee("Frodo Baggins", "thief")));
+//        };
+//    }
 }
