@@ -1,4 +1,4 @@
-package com.instagram.demo.repository.schema;
+package com.instagram.demo.data.schema;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import java.util.Set;
 
 import static jakarta.persistence.FetchType.EAGER;
-import static jakarta.persistence.FetchType.LAZY;
 import static jakarta.persistence.GenerationType.IDENTITY;
 
 @Data
@@ -56,6 +55,12 @@ public class Person {
 
     @OneToMany(mappedBy = "author")
     private Set<Comment> comments;
+
+    @ManyToMany
+    private Set<Person> followers;
+
+    @ManyToMany(mappedBy = "followers")
+    private Set<Person> followees;
 //    private Integer numberOfPosts;
 //
 //    private Long numberOfFollowers;
