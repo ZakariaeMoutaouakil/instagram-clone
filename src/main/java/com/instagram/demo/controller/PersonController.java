@@ -10,24 +10,19 @@ import java.util.HashMap;
 import java.util.Optional;
 
 @RestController
-@RequestMapping(path = "/", produces = "application/json")
+@RequestMapping(path = "/persons/", produces = "application/json")
 @AllArgsConstructor
-@CrossOrigin(origins = "http://localhost:8080")
-public class Controller {
+@CrossOrigin(origins = "http://localhost:4200")
+public class PersonController {
     private final PostRepository postRepository;
     private final PersonRepository personRepository;
 
-    @GetMapping("/")
-    int all() {
-        return 1;//postRepository.findAll();
-    }
-
-    @GetMapping("/persons/info/{username}")
+    @GetMapping("info/{username}")
     Optional<PersonProjection> personBio(@PathVariable String username) {
         return personRepository.findByUsername(username);
     }
 
-    @GetMapping("/persons/stats/{username}")
+    @GetMapping("stats/{username}")
     HashMap<String, Long> personStats(@PathVariable String username) {
         HashMap<String, Long> hashMap = new HashMap<>();
         hashMap.put("followers", personRepository.countFollowersByUsername(username));

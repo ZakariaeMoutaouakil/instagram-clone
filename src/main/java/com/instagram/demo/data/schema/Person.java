@@ -1,7 +1,9 @@
 package com.instagram.demo.data.schema;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,6 +27,12 @@ public class Person {
     @Size(min = 1, max = 20)
     @Column(unique = true)
     private String username;
+
+    @NotNull
+    private boolean validated;
+
+    @NotNull
+    private String photo;
 
     @NotNull
     @Email

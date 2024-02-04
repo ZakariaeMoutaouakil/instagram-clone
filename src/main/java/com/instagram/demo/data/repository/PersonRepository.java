@@ -12,5 +12,6 @@ public interface PersonRepository extends CrudRepository<Person, Long> {
     long countByFollowersUsername(String username);
     // Counts number of people that follow the given user
     long countFollowersByUsername(String username);
-
+    // Counts number of people who like a given post given the url of the image in the post
+    long countByLikedPostImage(String image);
 }

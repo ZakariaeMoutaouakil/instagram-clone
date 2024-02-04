@@ -5,4 +5,6 @@ public interface PersonProjection {
     String getBio();
     String getFirstname();
     String getLastname();
+    Boolean getValidated();
+    String getPhoto();
 }
