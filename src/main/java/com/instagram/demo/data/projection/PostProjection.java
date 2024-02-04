@@ -3,7 +3,6 @@ package com.instagram.demo.data.projection;
 import com.instagram.demo.data.schema.Comment;
 import com.instagram.demo.data.schema.Person;
 
-import java.util.List;
 import java.util.Set;
 
 public interface PostProjection {
