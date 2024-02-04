@@ -26,8 +26,6 @@ public class Post {
     @Size(max = 140)
     private String description;
 
-//    private Long numberOfLikes;
-
     @ElementCollection
     private Set<String> hashtags;
 
@@ -37,6 +35,7 @@ public class Post {
     private String image;
 
     @ManyToOne(fetch = EAGER, optional = false)
+    @JoinTable(name="PostUploader")
     private Person uploader;
 
     @OneToMany(mappedBy = "likedPost")

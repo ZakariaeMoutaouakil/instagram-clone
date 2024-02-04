@@ -20,6 +20,7 @@ public class Comment {
     private Long id;
 
     @ManyToOne(fetch = EAGER, optional = false)
+    @JoinTable(name="CommentAuthor")
     private Person author;
 
     @NotNull
@@ -27,5 +28,6 @@ public class Comment {
     private String comment;
 
     @ManyToOne(fetch = EAGER, optional = false)
+    @JoinTable(name="CommentPost")
     private Post post;
 }

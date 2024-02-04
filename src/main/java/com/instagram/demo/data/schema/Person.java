@@ -65,13 +65,9 @@ public class Person {
     private Set<Comment> comments;
 
     @ManyToMany
+    @JoinTable(name="PersonFollowers")
     private Set<Person> followers;
 
     @ManyToMany(mappedBy = "followers")
     private Set<Person> followees;
-//    private Integer numberOfPosts;
-//
-//    private Long numberOfFollowers;
-//
-//    private Integer numberOfFollowees;
 }
