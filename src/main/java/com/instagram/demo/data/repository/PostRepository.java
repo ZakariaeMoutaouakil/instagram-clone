@@ -2,6 +2,8 @@ package com.instagram.demo.data.repository;
 
 import com.instagram.demo.data.projection.PostProjection;
 import com.instagram.demo.data.schema.Post;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +17,6 @@ public interface PostRepository extends CrudRepository<Post, Long> {
 //    List<PostProjection> findPostsByUploaderUsername(String username);
 
 //    @Query("SELECT p FROM Post p LEFT JOIN FETCH p.likers LEFT JOIN FETCH p.comments WHERE p.uploader.username = :username")
-    List<PostProjection> findPostsByUploaderUsername(@Param("username") String username);
+    Page<PostProjection> findPostsByUploaderUsername(String username, Pageable pageable);
     List<Post> findAllByUploaderUsername(String username);
 }
