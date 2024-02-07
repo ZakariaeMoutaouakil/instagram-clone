@@ -32,6 +32,7 @@ public class Post {
 //    private Long numberOfLikes;
 
     @ElementCollection
+    @Size(max = 5)
     private Set<String> hashtags;
 
     @NotNull

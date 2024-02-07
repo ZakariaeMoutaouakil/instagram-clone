@@ -1,5 +1,6 @@
 package com.instagram.demo.data.schema;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -37,10 +38,12 @@ public class Person {
     @NotNull
     @Email
     @Column(unique = true)
+    @JsonIgnore
     private String email;
 
     @NotNull
     @Size(min = 1, max = 20)
+    @JsonIgnore
     private String password;
 
     @NotNull
@@ -69,9 +72,4 @@ public class Person {
 
     @ManyToMany(mappedBy = "followers")
     private Set<Person> followees;
-//    private Integer numberOfPosts;
-//
-//    private Long numberOfFollowers;
-//
-//    private Integer numberOfFollowees;
 }

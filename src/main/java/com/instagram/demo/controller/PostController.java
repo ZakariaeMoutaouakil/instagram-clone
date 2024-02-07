@@ -1,6 +1,8 @@
 package com.instagram.demo.controller;
 
-import com.instagram.demo.data.projection.PostProjection;
+import com.instagram.demo.data.projection.comment.CommentProjection;
+import com.instagram.demo.data.projection.person.PersonFeed;
+import com.instagram.demo.data.projection.post.PostFeedProjection;
 import com.instagram.demo.data.repository.CommentRepository;
 import com.instagram.demo.data.repository.PersonRepository;
 import com.instagram.demo.data.repository.PostRepository;
@@ -9,12 +11,22 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-record PostPreview(String image, Long likesCount, Long commentCounts) {
+record PostPreview(Long id, String image, Long likesCount, Long commentCounts) {
+}
+
+record PostResponse(String photo, Set<String> hashtags,
+                    String image, Long timeUntilNow, String description, Page<CommentProjection> comments,
+                    Long likesCount) {
+}
+
+record PostFeed(PostFeedProjection postFeedProjection, Long likesCount, Long commentCounts) {
 }
 
 @RestController
@@ -31,16 +43,50 @@ public class PostController {
         return postRepository.findAllByUploaderUsername(username);
     }
 
+    @GetMapping("{id}")
+    Optional<PostResponse> post(@PathVariable Long id, @RequestParam Integer pageNumber) {
+        Pageable pageRequest = PageRequest.of(pageNumber, 2);
+        return postRepository
+                .findPostById(id)
+                .map(postProjection ->
+                        new PostResponse(
+                                postProjection.getUploaderPhoto(),
+                                postRepository.findHashtagsByPostId(id),
+                                postProjection.getImage(),
+                                postProjection.getTimeUntilNow(),
+                                postProjection.getDescription(),
+                                commentRepository.findByPostIdOrderByDateDesc(id, pageRequest),
+                                personRepository.countByLikedPostId(id)
+                        ));
+    }
+
     @GetMapping("preview/{username}")
     Page<PostPreview> postPreview(@PathVariable String username, @RequestParam Integer pageNumber) {
-        Pageable pageRequest = PageRequest.of(pageNumber, 3, Sort.by("date").descending());
+        Pageable pageRequest = PageRequest.of(pageNumber, 3);
         return postRepository
-                .findPostsByUploaderUsername(username, pageRequest)
-                .map(PostProjection::getImage)
-                .map(image ->
-                        new PostPreview(image,
-                                personRepository.countByLikedPostImage(image),
-                                commentRepository.countByPostImage(image)
+                .findPostsByUploaderUsernameOrderByDateDesc(username, pageRequest)
+                .map(postPreviewProjection ->
+                        new PostPreview(postPreviewProjection.getId(),
+                                postPreviewProjection.getImage(),
+                                personRepository.countByLikedPostId(postPreviewProjection.getId()),
+                                commentRepository.countByPostId(postPreviewProjection.getId())
                         ));
+    }
+
+    @GetMapping("feed/{username}")
+    Page<PostFeed> feed(@PathVariable String username, @RequestParam Integer pageNumber) {
+        Pageable pageRequest = PageRequest.of(pageNumber, 1);
+        return postRepository.findByUploaderIdInOrderByDateDesc(
+                        personRepository.findByFollowersUsername(username)
+                                .stream()
+                                .map(PersonFeed::getId)
+                                .collect(Collectors.toSet()),
+                        pageRequest)
+                .map(postFeedProjection -> new PostFeed(
+                                postFeedProjection,
+                                personRepository.countByLikedPostId(postFeedProjection.getId()),
+                                commentRepository.countByPostId(postFeedProjection.getId())
+                        )
+                );
     }
 }

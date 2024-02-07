@@ -32,7 +32,7 @@ public class Comment {
     @NotNull
     @CreationTimestamp
     @Past
-    private LocalDateTime date = LocalDateTime.now();
+    private LocalDateTime date;
 
     @NotNull
     @Size(min = 1, max = 50)
@@ -40,4 +40,11 @@ public class Comment {
 
     @ManyToOne(fetch = EAGER, optional = false)
     private Post post;
+
+    public Comment(Person author, String comment, Post post) {
+        this.author = author;
+        this.comment = comment;
+        this.post = post;
+        this.date = LocalDateTime.now();
+    }
 }

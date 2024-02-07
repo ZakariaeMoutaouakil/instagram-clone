@@ -1,4 +1,4 @@
-package com.instagram.demo.data.projection;
+package com.instagram.demo.data.projection.person;
 
 public interface PersonProjection {
     String getUsername();

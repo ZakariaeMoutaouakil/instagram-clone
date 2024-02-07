@@ -1,6 +1,6 @@
 package com.instagram.demo.controller;
 
-import com.instagram.demo.data.projection.PersonProjection;
+import com.instagram.demo.data.projection.person.PersonProjection;
 import com.instagram.demo.data.repository.PersonRepository;
 import com.instagram.demo.data.repository.PostRepository;
 import lombok.AllArgsConstructor;
