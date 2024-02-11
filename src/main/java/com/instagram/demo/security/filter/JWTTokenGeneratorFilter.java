@@ -45,7 +45,7 @@ public class JWTTokenGeneratorFilter extends OncePerRequestFilter {
 
             Cookie jwtCookie = new Cookie(JWT_COOKIE_NAME, jwt);
             jwtCookie.setHttpOnly(true);
-            jwtCookie.setSecure(false); // Make it secure (HTTPS only)
+            jwtCookie.setSecure(true); // Make it secure (HTTPS only)
             jwtCookie.setMaxAge(3600000); // Set cookie expiration time in seconds
             jwtCookie.setPath("/"); // Set cookie path
 
@@ -58,6 +58,6 @@ public class JWTTokenGeneratorFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getServletPath().equals("/login/john_doe");
+        return !request.getServletPath().equals("/login");
     }
 }

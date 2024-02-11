@@ -11,13 +11,20 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 record RegisterUserCredentials(String username, String email, String password, String firstname, String lastname) {
 }
-record LoginUserCredentials(String username, String password) {
-}
 
 @RestController
 @RequestMapping(path = "/", produces = "application/json")
 @AllArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(
+        origins = "http://localhost:4200",
+        allowCredentials = "true",
+        maxAge = 3600,
+        allowedHeaders = "*",
+        methods= {RequestMethod.GET,RequestMethod.POST,
+                RequestMethod.DELETE, RequestMethod.PUT,
+                RequestMethod.PATCH, RequestMethod.OPTIONS,
+                RequestMethod.HEAD, RequestMethod.TRACE}
+)
 public class AuthController {
     private final PersonRepository personRepository;
     private final PasswordEncoder passwordEncoder;
