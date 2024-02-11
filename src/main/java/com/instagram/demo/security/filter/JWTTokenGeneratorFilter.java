@@ -15,16 +15,23 @@ import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.logging.Logger;
 
 public class JWTTokenGeneratorFilter extends OncePerRequestFilter {
     public static final String JWT_KEY = "jxgEQeXHuPq8VdbyYFNkANdudQ53YUn4";
     public static final String JWT_HEADER = "Authorization";
+
+    private final Logger LOG = Logger.getLogger(AuthoritiesLoggingAtFilter.class.getName());
+
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null) {
+            LOG.info("authentication: " + authentication.getName());
+//            LOG.info("authentication: " + authentication.getCredentials().toString());
+            LOG.info("authentication: " + authentication.getAuthorities().toString());
             SecretKey key = Keys.hmacShaKeyFor(JWT_KEY.getBytes(StandardCharsets.UTF_8));
             String jwt = Jwts.builder()
                     .issuer("Eazy Bank")
@@ -34,6 +41,8 @@ public class JWTTokenGeneratorFilter extends OncePerRequestFilter {
                     .expiration(new Date((new Date()).getTime() + 30000000))
                     .signWith(key).compact();
             response.setHeader(JWT_HEADER, jwt);
+
+            LOG.info("jwt= " + jwt);
         }
 
         filterChain.doFilter(request, response);

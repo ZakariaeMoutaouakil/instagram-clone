@@ -19,8 +19,10 @@ import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class JWTTokenValidatorFilter extends OncePerRequestFilter {
+    private final Logger LOG = Logger.getLogger(JWTTokenValidatorFilter.class.getName());
     public static final String JWT_KEY = "jxgEQeXHuPq8VdbyYFNkANdudQ53YUn4";
     public static final String JWT_HEADER = "Authorization";
 
@@ -38,6 +40,7 @@ public class JWTTokenValidatorFilter extends OncePerRequestFilter {
                         .parseSignedClaims(jwt)
                         .getPayload();
                 String username = String.valueOf(claims.get("username"));
+                LOG.info(" String username = String.valueOf(claims.get(username)): "+ username);
                 Authentication auth = new UsernamePasswordAuthenticationToken(username, null,
                         List.of((GrantedAuthority) () -> "USER"));
                 SecurityContextHolder.getContext().setAuthentication(auth);

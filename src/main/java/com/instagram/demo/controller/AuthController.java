@@ -4,11 +4,13 @@ import com.instagram.demo.data.repository.PersonRepository;
 import com.instagram.demo.data.schema.Person;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
+record RegisterUserCredentials(String username, String email, String password, String firstname, String lastname) {
+}
+record LoginUserCredentials(String username, String password) {
+}
 
 @RestController
 @RequestMapping(path = "/", produces = "application/json")
@@ -20,22 +22,22 @@ public class AuthController {
 
     @PostMapping("register")
     @ResponseStatus(code = HttpStatus.CREATED, reason = "Your account was successfully created.")
-    Person register(@RequestBody UserCredentials userCredentials) {
+    Person register(@RequestBody RegisterUserCredentials registerUserCredentials) {
         return personRepository.save(new Person(
-                userCredentials.username(),
-                userCredentials.email(),
-                passwordEncoder.encode(userCredentials.password()),
-                userCredentials.firstname(),
-                userCredentials.lastname()
+                registerUserCredentials.username(),
+                registerUserCredentials.email(),
+                passwordEncoder.encode(registerUserCredentials.password()),
+                registerUserCredentials.firstname(),
+                registerUserCredentials.lastname()
         ));
     }
     @RequestMapping("login/{username}")
-    public Optional<Person> getUserDetailsAfterLogin1(@PathVariable String username) {
-        return personRepository.findFirstByUsername(username);
-    }
-
-    @RequestMapping("login")
-    public Optional<Person> getUserDetailsAfterLogin(Authentication authentication) {
-        return personRepository.findFirstByUsername(authentication.getName());
+    public String login(@PathVariable String username) {
+        return personRepository
+                .findFirstByUsername(username)
+                .map(Person::getUsername)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User with specified credentials is not found.")
+                );
     }
 }

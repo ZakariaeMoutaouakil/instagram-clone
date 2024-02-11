@@ -9,9 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Optional;
 
-record UserCredentials(String username, String email, String password, String firstname,
-                       String lastname) {
-}
+
 
 @RestController
 @RequestMapping(path = "/persons/", produces = "application/json")
