@@ -1,4 +1,4 @@
-package com.instagram.demo.security;
+package com.instagram.demo.security.user;
 
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;

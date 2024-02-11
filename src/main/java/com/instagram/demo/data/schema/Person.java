@@ -2,9 +2,7 @@ package com.instagram.demo.data.schema;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,7 +40,8 @@ public class Person {
     private String email;
 
     @NotNull
-    @Size(min = 1, max = 20)
+    @NotEmpty
+    @NotBlank
     @JsonIgnore
     private String password;
 

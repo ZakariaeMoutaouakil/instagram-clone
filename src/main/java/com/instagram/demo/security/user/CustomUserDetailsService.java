@@ -1,4 +1,4 @@
-package com.instagram.demo.security;
+package com.instagram.demo.security.user;
 
 import com.instagram.demo.data.repository.PersonRepository;
 import lombok.AllArgsConstructor;
