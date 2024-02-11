@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
@@ -19,17 +20,26 @@ import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class JWTTokenValidatorFilter extends OncePerRequestFilter {
-    private final Logger LOG = Logger.getLogger(JWTTokenValidatorFilter.class.getName());
     public static final String JWT_KEY = "jxgEQeXHuPq8VdbyYFNkANdudQ53YUn4";
-    public static final String JWT_HEADER = "Authorization";
+    public static final String JWT_COOKIE_NAME = "jwt_token";
+//    private final Logger LOG = Logger.getLogger(JWTTokenValidatorFilter.class.getName());
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-        String jwt = request.getHeader(JWT_HEADER);
+        String jwt = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals(JWT_COOKIE_NAME)) {
+                    jwt = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
         if (jwt != null) {
             try {
                 SecretKey key = Keys.hmacShaKeyFor(JWT_KEY.getBytes(StandardCharsets.UTF_8));
@@ -40,10 +50,12 @@ public class JWTTokenValidatorFilter extends OncePerRequestFilter {
                         .parseSignedClaims(jwt)
                         .getPayload();
                 String username = String.valueOf(claims.get("username"));
-                LOG.info(" String username = String.valueOf(claims.get(username)): "+ username);
-                Authentication auth = new UsernamePasswordAuthenticationToken(username, null,
-                        List.of((GrantedAuthority) () -> "USER"));
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                        username,
+                        null,
+                        List.of((GrantedAuthority) () -> "USER")
+                );
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (Exception e) {
                 throw new BadCredentialsException("Invalid Token received!");
             }

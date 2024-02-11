@@ -27,11 +27,11 @@ public class SecurityConfiguration {
                 .cors(c -> {
                     CorsConfigurationSource source = request -> {
                         CorsConfiguration config = new CorsConfiguration();
-                        config.setAllowedOrigins(List.of("*"));
+                        config.setAllowedOrigins(List.of("http://localhost:4200"));
                         config.setAllowCredentials(true);
                         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
                         config.setAllowedHeaders(List.of("*"));
-                        config.setExposedHeaders(List.of("Authorization"));
+                        config.setExposedHeaders(List.of("*"));
                         config.setMaxAge(3600L);
                         return config;
                     };
@@ -41,13 +41,11 @@ public class SecurityConfiguration {
                 .addFilterBefore(new JWTTokenValidatorFilter(), BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(
                         (requests) -> requests
-                                .requestMatchers("/posts/**","/login/**")
+                                .requestMatchers("**")
                                 .authenticated()
-                                .requestMatchers("/register", "/h2-console/**")
-//                                .anyRequest()
+                                .requestMatchers("/register")
                                 .permitAll()
                 )
-//                .formLogin(Customizer.withDefaults())
                 .httpBasic(Customizer.withDefaults())
                 .build();
     }

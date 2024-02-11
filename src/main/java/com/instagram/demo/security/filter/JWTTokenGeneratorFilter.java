@@ -4,6 +4,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
@@ -19,7 +20,7 @@ import java.util.logging.Logger;
 
 public class JWTTokenGeneratorFilter extends OncePerRequestFilter {
     public static final String JWT_KEY = "jxgEQeXHuPq8VdbyYFNkANdudQ53YUn4";
-    public static final String JWT_HEADER = "Authorization";
+    public static final String JWT_COOKIE_NAME = "jwt_token";
 
     private final Logger LOG = Logger.getLogger(AuthoritiesLoggingAtFilter.class.getName());
 
@@ -39,9 +40,16 @@ public class JWTTokenGeneratorFilter extends OncePerRequestFilter {
                     .claim("username", authentication.getName())
                     .issuedAt(new Date())
                     .expiration(new Date((new Date()).getTime() + 30000000))
-                    .signWith(key).compact();
-            response.setHeader(JWT_HEADER, jwt);
+                    .signWith(key)
+                    .compact();
 
+            Cookie jwtCookie = new Cookie(JWT_COOKIE_NAME, jwt);
+            jwtCookie.setHttpOnly(true);
+            jwtCookie.setSecure(false); // Make it secure (HTTPS only)
+            jwtCookie.setMaxAge(3600000); // Set cookie expiration time in seconds
+            jwtCookie.setPath("/"); // Set cookie path
+
+            response.addCookie(jwtCookie);
             LOG.info("jwt= " + jwt);
         }
 

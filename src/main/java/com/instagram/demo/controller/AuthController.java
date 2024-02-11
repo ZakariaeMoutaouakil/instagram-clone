@@ -1,9 +1,11 @@
 package com.instagram.demo.controller;
 
+import com.instagram.demo.data.projection.person.PersonProjection;
 import com.instagram.demo.data.repository.PersonRepository;
 import com.instagram.demo.data.schema.Person;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -31,11 +33,10 @@ public class AuthController {
                 registerUserCredentials.lastname()
         ));
     }
-    @RequestMapping("login/{username}")
-    public String login(@PathVariable String username) {
+    @GetMapping("login")
+    public PersonProjection login(Authentication authentication) {
         return personRepository
-                .findFirstByUsername(username)
-                .map(Person::getUsername)
+                .findByUsername(authentication.getName())
                 .orElseThrow(() ->
                         new UsernameNotFoundException("User with specified credentials is not found.")
                 );
