@@ -14,7 +14,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping(path = "/persons/", produces = "application/json")
 @AllArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
 public class PersonController {
     private final PostRepository postRepository;
     private final PersonRepository personRepository;

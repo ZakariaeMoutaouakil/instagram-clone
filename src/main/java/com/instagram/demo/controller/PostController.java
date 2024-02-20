@@ -32,7 +32,6 @@ record PostFeed(PostFeedProjection postFeedProjection, Long likesCount, Long com
 @RestController
 @RequestMapping(path = "/posts/", produces = "application/json")
 @AllArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
 public class PostController {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;

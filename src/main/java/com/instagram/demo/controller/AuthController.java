@@ -17,7 +17,6 @@ record RegisterUserCredentials(String username, String email, String password, S
 @RestController
 @RequestMapping(path = "/", produces = "application/json")
 @AllArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
     private final PersonRepository personRepository;
     private final PasswordEncoder passwordEncoder;

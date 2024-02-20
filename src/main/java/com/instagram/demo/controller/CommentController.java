@@ -16,7 +16,6 @@ record NewComment(String comment, String username) {
 @RestController
 @RequestMapping(path = "/comments/", produces = "application/json")
 @AllArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
 public class CommentController {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
