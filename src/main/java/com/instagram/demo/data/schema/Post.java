@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Set;
 
 import static jakarta.persistence.FetchType.EAGER;
@@ -48,9 +49,22 @@ public class Post {
     @ManyToOne(fetch = EAGER, optional = false)
     private Person uploader;
 
-    @OneToMany(mappedBy = "likedPost")
+    @ManyToMany(mappedBy = "likedPosts")
     private Set<Person> likers;
 
     @OneToMany(mappedBy = "post")
     private Set<Comment> comments;
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Post post = (Post) obj;
+        return Objects.equals(id, post.id);
+    }
 }

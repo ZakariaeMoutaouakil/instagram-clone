@@ -3,12 +3,12 @@ package com.instagram.demo.data.repository;
 import com.instagram.demo.data.projection.post.PostFeedProjection;
 import com.instagram.demo.data.projection.post.PostPreviewProjection;
 import com.instagram.demo.data.projection.post.PostProjection;
-import com.instagram.demo.data.schema.Person;
 import com.instagram.demo.data.schema.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +27,8 @@ public interface PostRepository extends CrudRepository<Post, Long> {
 
     Optional<PostProjection> findPostById(Long id);
 
-    @Query(value = "SELECT HASHTAGS FROM POST_HASHTAGS WHERE POST_ID = ?1", nativeQuery = true)
+    @Query(value = "SELECT hashtags FROM post_hashtags WHERE post_id = ?1", nativeQuery = true)
+//    @Query(value = "SELECT p.hashtags FROM Post p WHERE p.id = :postId")
     Set<String> findHashtagsByPostId(Long id);
 
     Page<PostFeedProjection> findByUploaderIdInOrderByDateDesc(Set<Long> ids, Pageable pageable);

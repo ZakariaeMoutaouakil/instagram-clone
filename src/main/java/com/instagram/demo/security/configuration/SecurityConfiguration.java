@@ -32,7 +32,7 @@ public class SecurityConfiguration {
                 .cors(c -> {
                     CorsConfigurationSource source = request -> {
                         CorsConfiguration config = new CorsConfiguration();
-                        config.setAllowedOrigins(List.of("http://localhost:4200", "https://instagram-4160e.web.app", "https://instagram-4160e.web.app/"));
+                        config.setAllowedOrigins(List.of("http://localhost:4200", "https://instagram-4160e.web.app"));
                         config.setAllowCredentials(true);
                         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
                         config.setAllowedHeaders(List.of("*"));

@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Objects;
 import java.util.Set;
 
 import static jakarta.persistence.FetchType.EAGER;
@@ -60,8 +61,8 @@ public class Person {
     @OneToMany(mappedBy = "uploader")
     private Set<Post> uploads;
 
-    @ManyToOne(fetch = EAGER)
-    private Post likedPost;
+    @ManyToMany(fetch = EAGER)
+    private Set<Post> likedPosts;
 
     @OneToMany(mappedBy = "author")
     private Set<Comment> comments;
@@ -82,4 +83,18 @@ public class Person {
         this.lastname = lastname;
         this.bio = "";
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Person person = (Person) obj;
+        return Objects.equals(id, person.id);
+    }
+
 }
