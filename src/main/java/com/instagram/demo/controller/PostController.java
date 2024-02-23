@@ -26,26 +26,90 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Represents a preview of a post.
+ * This record contains essential information about a post that is suitable for displaying in a preview format.
+ *
+ * @param id            The ID of the post.
+ * @param image         The URL or path to the image associated with the post.
+ * @param likesCount    The number of likes received by the post.
+ * @param commentCounts The number of comments made on the post.
+ */
 record PostPreview(Long id, String image, Long likesCount, Long commentCounts) {
 }
 
-record PostResponse(String photo, Set<String> hashtags,
-                    String image, Long timeUntilNow, String description, Page<CommentProjection> comments,
+/**
+ * Represents a detailed response for a post.
+ * This record contains comprehensive information about a post, including its image, description, hashtags, comments, and likes.
+ *
+ * @param photo        The URL or path to the uploader's photo.
+ * @param hashtags     The set of hashtags associated with the post.
+ * @param image        The URL or path to the image associated with the post.
+ * @param timeUntilNow The time elapsed since the post was made.
+ * @param description  The description or caption of the post.
+ * @param comments     The page containing comments associated with the post.
+ * @param likesCount   The total number of likes received by the post.
+ */
+record PostResponse(String photo,
+                    Set<String> hashtags,
+                    String image,
+                    Long timeUntilNow,
+                    String description,
+                    Page<CommentProjection> comments,
                     Long likesCount) {
 }
 
+/**
+ * Represents a post for feed.
+ * This record contains information about a post suitable for displaying in a feed.
+ *
+ * @param postFeedProjection The projection of the post.
+ * @param likesCount         The number of likes received by the post.
+ * @param commentCounts      The number of comments made on the post.
+ */
 record PostFeed(PostFeedProjection postFeedProjection, Long likesCount, Long commentCounts) {
 }
 
+/**
+ * Controller class for managing operations related to posts.
+ * This controller provides endpoints for retrieving, creating, updating, and deleting posts,
+ * as well as handling operations such as liking/unliking posts and fetching post previews.
+ */
 @RestController
 @RequestMapping(path = "/posts/", produces = "application/json")
 @AllArgsConstructor
 public class PostController {
+    /**
+     * Logger instance for logging messages related to PostController class.
+     */
     private static final Logger logger = LoggerFactory.getLogger(PostController.class);
+
+    /**
+     * Repository for performing CRUD operations on posts.
+     */
     private final PostRepository postRepository;
+
+    /**
+     * Repository for performing CRUD operations on comments.
+     */
     private final CommentRepository commentRepository;
+
+    /**
+     * Repository for performing CRUD operations on persons (users).
+     */
     private final PersonRepository personRepository;
 
+    /**
+     * Retrieves detailed information about a specific post by its ID.
+     * This endpoint returns an optional {@link PostResponse} object representing the post with the specified ID.
+     * If the post with the given ID exists, the method returns a populated {@link Optional} containing the post details;
+     * otherwise, it returns an empty {@link Optional}.
+     *
+     * @param id         The ID of the post to retrieve.
+     * @param pageNumber The page number for retrieving comments associated with the post. Page numbering starts from 0.
+     * @return An {@link Optional} containing a {@link PostResponse} object representing the detailed information about the post
+     * if the post with the specified ID exists; otherwise, an empty {@link Optional}.
+     */
     @GetMapping("{id}")
     Optional<PostResponse> post(@PathVariable Long id, @RequestParam Integer pageNumber) {
         Pageable pageRequest = PageRequest.of(pageNumber, 2);
@@ -63,6 +127,16 @@ public class PostController {
                         ));
     }
 
+    /**
+     * Retrieves a page of post previews for a specific user.
+     * This endpoint returns a paginated list of post previews belonging to the specified user.
+     * The posts are sorted by date in descending order.
+     *
+     * @param username   The username of the user whose post previews are to be retrieved.
+     * @param pageNumber The page number to retrieve. Page numbering starts from 0.
+     * @return A {@link org.springframework.data.domain.Page} containing {@link PostPreview} objects representing post previews for the specified user.
+     * Each post preview includes essential information such as the post ID, image, number of likers, and number of comments.
+     */
     @GetMapping("preview/{username}")
     Page<PostPreview> postPreview(@PathVariable String username, @RequestParam Integer pageNumber) {
         Pageable pageRequest = PageRequest.of(pageNumber, 3);
@@ -76,6 +150,17 @@ public class PostController {
                         ));
     }
 
+    /**
+     * Retrieves a page of posts for the authenticated user's feed.
+     * This endpoint returns a paginated list of posts from users whom the authenticated user is following.
+     * The posts are sorted by date in descending order.
+     *
+     * @param authentication The authentication object representing the currently authenticated user.
+     * @param pageNumber     The page number to retrieve. Page numbering starts from 0.
+     * @return A {@link org.springframework.data.domain.Page} containing {@link PostFeed} objects representing posts in the feed.
+     * Each post is augmented with additional information such as the number of likers and comments.
+     * @throws org.springframework.security.core.AuthenticationException if the user is not authenticated.
+     */
     @GetMapping("feed")
     Page<PostFeed> feed(Authentication authentication, @RequestParam Integer pageNumber) {
         Pageable pageRequest = PageRequest.of(pageNumber, 1);
@@ -93,6 +178,20 @@ public class PostController {
                 );
     }
 
+    /**
+     * Handles liking/unliking a post by a user.
+     * This endpoint allows a user to like or unlike a post with the specified ID.
+     * If the user has already liked the post, the like will be removed.
+     * If the user has not liked the post before, the post will be liked.
+     *
+     * @param postId         The ID of the post to be liked/unliked.
+     * @param authentication The authentication object representing the currently authenticated user.
+     * @return A {@link org.springframework.http.ResponseEntity} containing a message indicating the success or failure
+     * of the like/unlike operation. If the operation is successful, the response status is {@link org.springframework.http.HttpStatus#CREATED}
+     * for liking a post and {@link org.springframework.http.HttpStatus#OK} for unliking a post.
+     * If the post or user is not found, the response status is {@link org.springframework.http.HttpStatus#NOT_FOUND}.
+     * If an unexpected error occurs during the operation, the response status is {@link org.springframework.http.HttpStatus#INTERNAL_SERVER_ERROR}.
+     */
     @PostMapping("like/{postId}")
     ResponseEntity<String> likePost(@PathVariable Long postId, Authentication authentication) {
         try {
