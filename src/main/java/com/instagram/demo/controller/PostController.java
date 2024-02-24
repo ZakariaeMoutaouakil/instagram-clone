@@ -1,5 +1,6 @@
 package com.instagram.demo.controller;
 
+import com.google.gson.Gson;
 import com.instagram.demo.data.projection.comment.CommentProjection;
 import com.instagram.demo.data.projection.person.PersonFeed;
 import com.instagram.demo.data.projection.post.PostFeedProjection;
@@ -56,7 +57,8 @@ record PostResponse(String photo,
                     Long timeUntilNow,
                     String description,
                     Page<CommentProjection> comments,
-                    Long likesCount) {
+                    Long likesCount,
+                    Boolean like) {
 }
 
 /**
@@ -67,7 +69,10 @@ record PostResponse(String photo,
  * @param likesCount         The number of likes received by the post.
  * @param commentCounts      The number of comments made on the post.
  */
-record PostFeed(PostFeedProjection postFeedProjection, Long likesCount, Long commentCounts) {
+record PostFeed(PostFeedProjection postFeedProjection,
+                Long likesCount,
+                Long commentCounts,
+                Boolean like) {
 }
 
 /**
@@ -105,25 +110,28 @@ public class PostController {
      * If the post with the given ID exists, the method returns a populated {@link Optional} containing the post details;
      * otherwise, it returns an empty {@link Optional}.
      *
-     * @param id         The ID of the post to retrieve.
+     * @param postId     The ID of the post to retrieve.
      * @param pageNumber The page number for retrieving comments associated with the post. Page numbering starts from 0.
      * @return An {@link Optional} containing a {@link PostResponse} object representing the detailed information about the post
      * if the post with the specified ID exists; otherwise, an empty {@link Optional}.
      */
-    @GetMapping("{id}")
-    Optional<PostResponse> post(@PathVariable Long id, @RequestParam Integer pageNumber) {
+    @GetMapping("{postId}")
+    Optional<PostResponse> post(@PathVariable Long postId,
+                                @RequestParam Integer pageNumber,
+                                Authentication authentication) {
         Pageable pageRequest = PageRequest.of(pageNumber, 2);
         return postRepository
-                .findPostById(id)
+                .findPostById(postId)
                 .map(postProjection ->
                         new PostResponse(
                                 postProjection.getUploaderPhoto(),
-                                postRepository.findHashtagsByPostId(id),
+                                postRepository.findHashtagsByPostId(postId),
                                 postProjection.getImage(),
                                 postProjection.getTimeUntilNow(),
                                 postProjection.getDescription(),
-                                commentRepository.findByPostIdOrderByDateDesc(id, pageRequest),
-                                personRepository.countLikersByPostId(id)
+                                commentRepository.findByPostIdOrderByDateDesc(postId, pageRequest),
+                                personRepository.countLikersByPostId(postId),
+                                postRepository.existsLikedPostByUser(postId, authentication.getName())
                         ));
     }
 
@@ -173,7 +181,11 @@ public class PostController {
                 .map(postFeedProjection -> new PostFeed(
                                 postFeedProjection,
                                 personRepository.countLikersByPostId(postFeedProjection.getId()),
-                                commentRepository.countByPostId(postFeedProjection.getId())
+                                commentRepository.countByPostId(postFeedProjection.getId()),
+                                postRepository.existsLikedPostByUser(
+                                        postFeedProjection.getId(),
+                                        authentication.getName()
+                                )
                         )
                 );
     }
@@ -234,14 +246,24 @@ public class PostController {
 
             // Return appropriate response based on like toggling
             if (post.getLikers().contains(person)) {
-                return new ResponseEntity<>("Post liked successfully", HttpStatus.CREATED);
+                return new ResponseEntity<>(
+                        new Gson().toJson("Post liked successfully"),
+                        HttpStatus.CREATED
+                );
             } else {
-                return new ResponseEntity<>("Post unliked successfully", HttpStatus.OK);
+                return new ResponseEntity<>(
+                        new Gson().toJson("Post unliked successfully"),
+                        HttpStatus.OK
+                );
             }
         } catch (EntityNotFoundException | UsernameNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new Gson().toJson(e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred");
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Gson().toJson("An error occurred"));
         }
     }
 }

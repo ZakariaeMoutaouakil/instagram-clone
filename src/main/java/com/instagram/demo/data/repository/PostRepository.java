@@ -33,4 +33,7 @@ public interface PostRepository extends CrudRepository<Post, Long> {
 
     Page<PostFeedProjection> findByUploaderIdInOrderByDateDesc(Set<Long> ids, Pageable pageable);
 
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN TRUE ELSE FALSE END FROM Post p JOIN p.likers liker WHERE p.id = :postId AND liker.username = :username")
+    boolean existsLikedPostByUser(@Param("postId") Long postId, @Param("username") String username);
+
 }
