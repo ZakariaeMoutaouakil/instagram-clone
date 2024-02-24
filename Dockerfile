@@ -2,6 +2,7 @@
 ARG DB_URL
 ARG DB_USERNAME
 ARG DB_PASSWORD
+ARG DEBUG
 
 # Build stage
 FROM maven:3.9.6-eclipse-temurin-21-jammy AS build
@@ -20,6 +21,7 @@ FROM openjdk:21-jdk-slim-buster
 ARG DB_URL
 ARG DB_USERNAME
 ARG DB_PASSWORD
+ARG DEBUG
 EXPOSE 8080
 
 # Copy the built JAR file from the previous stage
@@ -30,6 +32,7 @@ ENV JAVA_OPTS="-Xmx500m -Xms500m"
 ENV DB_URL=${DB_URL}
 ENV DB_USERNAME=${DB_USERNAME}
 ENV DB_PASSWORD=${DB_PASSWORD}
+ENV DEBUG=${DEBUG}
 
 # Start the Spring Boot application
 ENTRYPOINT ["java", "-jar", "/app.jar"]
