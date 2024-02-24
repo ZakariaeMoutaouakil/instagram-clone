@@ -10,6 +10,7 @@ import com.instagram.demo.data.repository.PostRepository;
 import com.instagram.demo.data.schema.Person;
 import com.instagram.demo.data.schema.Post;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -204,6 +205,7 @@ public class PostController {
      * If the post or user is not found, the response status is {@link org.springframework.http.HttpStatus#NOT_FOUND}.
      * If an unexpected error occurs during the operation, the response status is {@link org.springframework.http.HttpStatus#INTERNAL_SERVER_ERROR}.
      */
+    @Transactional
     @PostMapping("like/{postId}")
     ResponseEntity<String> likePost(@PathVariable Long postId, Authentication authentication) {
         try {
@@ -224,7 +226,7 @@ public class PostController {
                 post.setLikers(new HashSet<>());
             }
 
-            // Initialize likedPost set if null
+            // Initialize LikedPosts set if null
             if (person.getLikedPosts() == null) {
                 person.setLikedPosts(new HashSet<>());
             }

@@ -46,7 +46,9 @@ public interface PersonRepository extends CrudRepository<Person, Long> {
      * @param username The username of the user whose followers count is to be counted.
      * @return The number of people following the user.
      */
-    long countFollowersByUsername(String username);
+    @Query("SELECT COUNT(u) FROM Person u JOIN u.followees f WHERE f.username = :username")
+    long countFollowersByUsername(@Param("username") String username);
+
 
     /**
      * Counts the number of people who like a given post identified by its ID.
@@ -85,4 +87,10 @@ public interface PersonRepository extends CrudRepository<Person, Long> {
             "LIMIT 3",
             nativeQuery = true)
     List<PersonSuggestion> findThreeRandomUsersNotFollowedByUser(String username);
+
+    @Query("SELECT CASE WHEN COUNT(f) > 0 THEN TRUE ELSE FALSE END " +
+            "FROM Person f " +
+            "JOIN f.followers u " +
+            "WHERE u.username = :followerUsername AND f.username = :followeeUsername")
+    boolean isFollowing(@Param("followerUsername") String followerUsername, @Param("followeeUsername") String followeeUsername);
 }

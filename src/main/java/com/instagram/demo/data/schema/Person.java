@@ -97,4 +97,18 @@ public class Person {
         return Objects.equals(id, person.id);
     }
 
+    @Override
+    public String toString() {
+        return "Person{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", validated=" + validated +
+                ", photo='" + photo + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", firstname='" + firstname + '\'' +
+                ", lastname='" + lastname + '\'' +
+                ", bio='" + bio + '\'' +
+                '}';
+    }
 }

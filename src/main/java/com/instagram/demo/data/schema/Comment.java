@@ -47,4 +47,15 @@ public class Comment {
         this.post = post;
         this.date = LocalDateTime.now();
     }
+
+    @Override
+    public String toString() {
+        return "Comment{" +
+                "id=" + id +
+                ", author=" + author.getUsername() +
+                ", date=" + date +
+                ", comment='" + comment + '\'' +
+                ", post=" + post.getId() +
+                '}';
+    }
 }

@@ -67,4 +67,18 @@ public class Post {
         Post post = (Post) obj;
         return Objects.equals(id, post.id);
     }
+
+    @Override
+    public String toString() {
+        return "Post{" +
+                "id=" + id +
+                ", description='" + description + '\'' +
+                ", hashtags=" + hashtags +
+                ", image='" + image + '\'' +
+                ", date=" + date +
+                ", uploader=" + uploader.getUsername() +
+                ", likers=" + likers.size() +
+                ", comments=" + comments.size() +
+                '}';
+    }
 }
