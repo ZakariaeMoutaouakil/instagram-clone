@@ -48,8 +48,6 @@ public class JWTTokenGeneratorFilter extends OncePerRequestFilter {
             jwtCookie.setSecure(true); // Make it secure (HTTPS only)
             jwtCookie.setMaxAge(3600000); // Set cookie expiration time in seconds
             jwtCookie.setPath("/"); // Set cookie path
-            response.setHeader("Set-Cookie", jwtCookie.getName() + "=" + jwtCookie.getValue() + "; Secure; HttpOnly; Max-Age=3600000; Path=/; SameSite=None");
-
             response.addCookie(jwtCookie);
             LOG.info("jwt= " + jwt);
         }

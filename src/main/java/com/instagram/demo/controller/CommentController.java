@@ -8,6 +8,7 @@ import com.instagram.demo.data.schema.Comment;
 import com.instagram.demo.data.schema.Person;
 import com.instagram.demo.data.schema.Post;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +50,7 @@ public class CommentController {
      * If the post or user is not found, the response status is {@link org.springframework.http.HttpStatus#NOT_FOUND}, and the message in the response body indicates the reason for failure.
      * If an unexpected error occurs during the operation, the response status is {@link org.springframework.http.HttpStatus#INTERNAL_SERVER_ERROR}, and the message in the response body indicates the error.
      */
-    @PostMapping(path = "create/{postId}")
+    @PostMapping(path = "{postId}")
     ResponseEntity<String> createComment(@RequestBody String comment,
                                          @PathVariable Long postId,
                                          Authentication authentication) {
@@ -96,7 +97,8 @@ public class CommentController {
      * - If an unexpected error occurs during the update process, returns ResponseEntity with
      * HTTP status INTERNAL_SERVER_ERROR (500) along with a generic error message.
      */
-    @PatchMapping("{commentId}")
+    @Transactional
+    @PutMapping("{commentId}")
     public ResponseEntity<String> updateCommentContent(@PathVariable Long commentId,
                                                        @RequestBody String updatedContent,
                                                        Authentication authentication) {

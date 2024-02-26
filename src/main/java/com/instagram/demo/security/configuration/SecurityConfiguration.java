@@ -2,6 +2,7 @@ package com.instagram.demo.security.configuration;
 
 import com.instagram.demo.security.filter.JWTTokenGeneratorFilter;
 import com.instagram.demo.security.filter.JWTTokenValidatorFilter;
+import org.springframework.boot.web.servlet.server.CookieSameSiteSupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -48,7 +49,7 @@ public class SecurityConfiguration {
                         (requests) -> requests
                                 .requestMatchers("**")
                                 .authenticated()
-                                .requestMatchers("/register", "/test")
+                                .requestMatchers("/register", "/login")
                                 .permitAll()
                 )
                 .httpBasic(Customizer.withDefaults())
@@ -59,5 +60,10 @@ public class SecurityConfiguration {
     public PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance();
 //        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CookieSameSiteSupplier applicationCookieSameSiteSupplier() {
+        return CookieSameSiteSupplier.ofNone();
     }
 }
