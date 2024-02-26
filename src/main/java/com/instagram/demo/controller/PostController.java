@@ -118,7 +118,7 @@ public class PostController {
      */
     @GetMapping("{postId}")
     Optional<PostResponse> post(@PathVariable Long postId,
-                                @RequestParam Integer pageNumber,
+                                @RequestParam(defaultValue = "0", required = false) Integer pageNumber,
                                 Authentication authentication) {
         Pageable pageRequest = PageRequest.of(pageNumber, 2);
         return postRepository

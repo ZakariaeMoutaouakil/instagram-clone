@@ -81,4 +81,93 @@ public class CommentController {
                     .body(new Gson().toJson("An error occurred"));
         }
     }
+
+    /**
+     * Updates the content of a comment if the authenticated user is the author of the comment.
+     *
+     * @param commentId      The ID of the comment to be updated.
+     * @param updatedContent The updated content for the comment.
+     * @param authentication An object representing the authentication details of the user making the request.
+     * @return ResponseEntity containing a message indicating the outcome of the update operation.
+     * - If the comment is successfully updated, returns ResponseEntity with HTTP status OK (200).
+     * - If the comment is not found, returns ResponseEntity with HTTP status NOT_FOUND (404).
+     * - If the authenticated user is not authorized to update the comment, returns ResponseEntity
+     * with HTTP status FORBIDDEN (403) along with a message indicating the lack of authorization.
+     * - If an unexpected error occurs during the update process, returns ResponseEntity with
+     * HTTP status INTERNAL_SERVER_ERROR (500) along with a generic error message.
+     */
+    @PatchMapping("{commentId}")
+    public ResponseEntity<String> updateCommentContent(@PathVariable Long commentId,
+                                                       @RequestBody String updatedContent,
+                                                       Authentication authentication) {
+        try {
+            Comment comment = commentRepository.findById(commentId)
+                    .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
+
+            // Check if the authenticated user is the author of the comment
+            if (!comment.getAuthor().getUsername().equals(authentication.getName())) {
+                return ResponseEntity
+                        .status(HttpStatus.FORBIDDEN)
+                        .body(new Gson().toJson("You are not authorized to update this comment"));
+            }
+
+            // Update the comment's content
+            comment.setComment(updatedContent);
+            commentRepository.save(comment);
+
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(new Gson().toJson("Comment content successfully updated"));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new Gson().toJson("Comment not found"));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Gson().toJson("An error occurred"));
+        }
+    }
+
+    /**
+     * Deletes a comment with the specified ID if the authenticated user is the author of the comment.
+     *
+     * @param commentId      The ID of the comment to be deleted.
+     * @param authentication An object representing the authentication details of the user making the request.
+     * @return ResponseEntity containing a message indicating the outcome of the deletion operation.
+     * - If the comment is successfully deleted, returns ResponseEntity with HTTP status OK (200).
+     * - If the comment is not found, returns ResponseEntity with HTTP status NOT_FOUND (404).
+     * - If the authenticated user is not authorized to delete the comment, returns ResponseEntity
+     * with HTTP status FORBIDDEN (403) along with a message indicating the lack of authorization.
+     * - If an unexpected error occurs during the deletion process, returns ResponseEntity with
+     * HTTP status INTERNAL_SERVER_ERROR (500) along with a generic error message.
+     */
+    @DeleteMapping("{commentId}")
+    public ResponseEntity<String> deleteComment(@PathVariable Long commentId,
+                                                Authentication authentication) {
+        try {
+            Comment comment = commentRepository.findById(commentId)
+                    .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
+
+            // Check if the authenticated user is the author of the comment
+            if (!comment.getAuthor().getUsername().equals(authentication.getName())) {
+                return ResponseEntity
+                        .status(HttpStatus.FORBIDDEN)
+                        .body(new Gson().toJson("You are not authorized to delete this comment"));
+            }
+
+            commentRepository.delete(comment);
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(new Gson().toJson("Comment successfully deleted"));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new Gson().toJson("Comment not found"));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Gson().toJson("An error occurred"));
+        }
+    }
 }

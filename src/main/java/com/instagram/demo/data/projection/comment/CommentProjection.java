@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
 public interface CommentProjection {
+    Long getId();
+
     LocalDateTime getDate();
 
     default long getTimeUntilNow() {
