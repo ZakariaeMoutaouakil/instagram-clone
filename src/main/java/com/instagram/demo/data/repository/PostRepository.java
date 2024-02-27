@@ -73,8 +73,34 @@ public interface PostRepository extends CrudRepository<Post, Long> {
     @Query("SELECT CASE WHEN COUNT(p) > 0 THEN TRUE ELSE FALSE END FROM Post p JOIN p.likers liker WHERE p.id = :postId AND liker.username = :username")
     boolean existsLikedPostByUser(@Param("postId") Long postId, @Param("username") String username);
 
+    /**
+     * Deletes all likes associated with a post given its ID.
+     *
+     * @param postId The ID of the post whose likes are to be deleted.
+     */
     @Transactional
     @Modifying
     @Query(value = "DELETE FROM person_liked_posts WHERE liked_posts_id = :postId", nativeQuery = true)
     void deleteLikesByPostId(@Param("postId") Long postId);
+
+    /**
+     * Deletes all hashtags associated with a post given its ID.
+     *
+     * @param postId The ID of the post whose hashtags are to be deleted.
+     */
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM post_hashtags WHERE post_id = :postId", nativeQuery = true)
+    void deleteHashtagsByPostId(@Param("postId") Long postId);
+
+    /**
+     * Inserts a new hashtag associated with a post given the post's ID and the hashtag.
+     *
+     * @param postId  The ID of the post to which the hashtag is associated.
+     * @param hashtag The hashtag to be inserted.
+     */
+    @Transactional
+    @Modifying
+    @Query(value = "INSERT INTO post_hashtags (post_id, hashtags) VALUES (:postId, :hashtag)", nativeQuery = true)
+    void insertHashtagsByPostId(@Param("postId") Long postId, @Param("hashtag") String hashtag);
 }

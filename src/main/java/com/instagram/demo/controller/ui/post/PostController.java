@@ -105,6 +105,9 @@ public class PostController {
      */
     private final PersonRepository personRepository;
 
+    /**
+     * Gson instance used for JSON serialization and deserialization.
+     */
     private final Gson gson;
 
     /**
@@ -138,6 +141,17 @@ public class PostController {
                         ));
     }
 
+
+    /**
+     * Updates an existing post with the provided details.
+     *
+     * @param postId          The ID of the post to be edited.
+     * @param requestPostBody The request body containing the updated post details.
+     * @param authentication  The authentication object representing the current user.
+     * @return ResponseEntity with a success message if the post is successfully edited,
+     * or an error message if an exception occurs.
+     */
+    @Transactional
     @PutMapping(path = "{postId}", consumes = "application/json")
     public ResponseEntity<String> editPost(@PathVariable Long postId,
                                            @RequestBody RequestPostBody requestPostBody,
@@ -160,8 +174,14 @@ public class PostController {
 
             // Update the post with the new details
             post.setDescription(requestPostBody.description());
-            post.setHashtags(Set.of(requestPostBody.hashtags())); // Convert array to Set
             post.setImage(requestPostBody.image());
+            logger.debug(post.toString());
+
+            postRepository.deleteHashtagsByPostId(postId);
+            for (String hashtag : requestPostBody.hashtags()) {
+                logger.debug("hashtag=" + hashtag);
+                postRepository.insertHashtagsByPostId(postId, hashtag);
+            }
 
             // Save the updated post
             postRepository.save(post);
@@ -348,6 +368,16 @@ public class PostController {
         }
     }
 
+    /**
+     * Deletes a post with the specified ID if the authenticated user is the uploader.
+     * If the post is successfully deleted, returns a success response.
+     * If the post is not found, returns a 404 Not Found response.
+     * If an error occurs during the deletion process, returns a 500 Internal Server Error response.
+     *
+     * @param postId         The ID of the post to delete.
+     * @param authentication The authentication object containing the details of the authenticated user.
+     * @return A ResponseEntity containing the result of the deletion operation.
+     */
     @Transactional
     @DeleteMapping("{postId}")
     public ResponseEntity<String> deletePost(@PathVariable Long postId, Authentication authentication) {
@@ -368,8 +398,9 @@ public class PostController {
                         .body(gson.toJson("You are not authorized to delete this post"));
             }
             logger.debug(post.toString());
-            postRepository.deleteLikesByPostId(postId);
+
             // If the authenticated user is the uploader, delete the post
+            postRepository.deleteLikesByPostId(postId);
             postRepository.delete(post);
 
             // Return success response
@@ -383,7 +414,9 @@ public class PostController {
         }
     }
 
-    // Define PostNotFoundException as a static inner class
+    /**
+     * Exception thrown when a post is not found.
+     */
     static class PostNotFoundException extends RuntimeException {
         public PostNotFoundException(String message) {
             super(message);
