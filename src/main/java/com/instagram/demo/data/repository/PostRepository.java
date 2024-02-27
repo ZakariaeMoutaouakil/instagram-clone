@@ -4,8 +4,10 @@ import com.instagram.demo.data.projection.post.PostFeedProjection;
 import com.instagram.demo.data.projection.post.PostPreviewProjection;
 import com.instagram.demo.data.projection.post.PostProjection;
 import com.instagram.demo.data.schema.Post;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -71,4 +73,8 @@ public interface PostRepository extends CrudRepository<Post, Long> {
     @Query("SELECT CASE WHEN COUNT(p) > 0 THEN TRUE ELSE FALSE END FROM Post p JOIN p.likers liker WHERE p.id = :postId AND liker.username = :username")
     boolean existsLikedPostByUser(@Param("postId") Long postId, @Param("username") String username);
 
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM person_liked_posts WHERE liked_posts_id = :postId", nativeQuery = true)
+    void deleteLikesByPostId(@Param("postId") Long postId);
 }

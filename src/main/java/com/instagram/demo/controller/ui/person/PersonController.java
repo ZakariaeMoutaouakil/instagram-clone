@@ -1,4 +1,4 @@
-package com.instagram.demo.controller;
+package com.instagram.demo.controller.ui.person;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;

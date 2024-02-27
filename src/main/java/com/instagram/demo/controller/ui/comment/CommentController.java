@@ -1,4 +1,4 @@
-package com.instagram.demo.controller;
+package com.instagram.demo.controller.ui.comment;
 
 import com.google.gson.Gson;
 import com.instagram.demo.data.repository.CommentRepository;

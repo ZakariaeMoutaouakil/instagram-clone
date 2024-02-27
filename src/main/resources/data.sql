@@ -31,7 +31,7 @@ VALUES ('john_doe', 'john.doe@example.com', 'password123', 'John', 'Doe', 'This 
         'https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg');
 
 -- Inserting Posts
-INSERT INTO Post (description, image,  uploader_id,date)
+INSERT INTO Post (description, image, uploader_id,date)
 VALUES ('First post by John',
         'https://img.freepik.com/photos-gratuite/peinture-lac-montagne-montagne-arriere-plan_188544-9126.jpg?size=626&ext=jpg&ga=GA1.1.1788068356.1706832000&semt=sph',
         1,CURRENT_TIMESTAMP),
@@ -99,3 +99,7 @@ INSERT INTO Person_followers (followers_id, followees_id)
 VALUES (1, 2), -- John follows Jane
        (1, 3), -- John follows Bob
        (2, 1); -- Jane follows John
+
+-- Likes
+INSERT INTO person_liked_posts (liked_posts_id, likers_id)
+VALUES (2,2); -- Jane likes her own unique post

@@ -1,4 +1,4 @@
-package com.instagram.demo.controller;
+package com.instagram.demo.controller.ui.post;
 
 import com.google.gson.Gson;
 import com.instagram.demo.data.projection.comment.CommentProjection;
@@ -105,6 +105,8 @@ public class PostController {
      */
     private final PersonRepository personRepository;
 
+    private final Gson gson;
+
     /**
      * Retrieves detailed information about a specific post by its ID.
      * This endpoint returns an optional {@link PostResponse} object representing the post with the specified ID.
@@ -134,6 +136,45 @@ public class PostController {
                                 personRepository.countLikersByPostId(postId),
                                 postRepository.existsLikedPostByUser(postId, authentication.getName())
                         ));
+    }
+
+    @PutMapping(path = "{postId}", consumes = "application/json")
+    public ResponseEntity<String> editPost(@PathVariable Long postId,
+                                           @RequestBody RequestPostBody requestPostBody,
+                                           Authentication authentication) {
+        try {
+            // Obtain authenticated user's information
+            String authenticatedUsername = authentication.getName();
+
+            // Retrieve the post from the database using its ID
+            Post post = postRepository
+                    .findById(postId)
+                    .orElseThrow(() -> new PostNotFoundException("Post not found"));
+
+            // Check if the authenticated user is the uploader of the post
+            if (!post.getUploader().getUsername().equals(authenticatedUsername)) {
+                return ResponseEntity
+                        .status(HttpStatus.FORBIDDEN)
+                        .body(gson.toJson("You are not authorized to edit this post"));
+            }
+
+            // Update the post with the new details
+            post.setDescription(requestPostBody.description());
+            post.setHashtags(Set.of(requestPostBody.hashtags())); // Convert array to Set
+            post.setImage(requestPostBody.image());
+
+            // Save the updated post
+            postRepository.save(post);
+
+            // Return success response
+            return ResponseEntity.status(HttpStatus.OK).body(gson.toJson("Post edited successfully"));
+        } catch (PostNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(gson.toJson("An error occurred while editing the post"));
+        }
     }
 
     /**
@@ -249,23 +290,103 @@ public class PostController {
             // Return appropriate response based on like toggling
             if (post.getLikers().contains(person)) {
                 return new ResponseEntity<>(
-                        new Gson().toJson("Post liked successfully"),
+                        gson.toJson("Post liked successfully"),
                         HttpStatus.CREATED
                 );
             } else {
                 return new ResponseEntity<>(
-                        new Gson().toJson("Post unliked successfully"),
+                        gson.toJson("Post unliked successfully"),
                         HttpStatus.OK
                 );
             }
         } catch (EntityNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(new Gson().toJson(e.getMessage()));
+                    .body(gson.toJson(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Gson().toJson("An error occurred"));
+                    .body(gson.toJson("An error occurred"));
+        }
+    }
+
+    @PostMapping(path = "", consumes = "application/json")
+    public ResponseEntity<?> createPost(@RequestBody RequestPostBody requestPostBody,
+                                        Authentication authentication) {
+        try {
+            // Retrieve the authenticated user
+            Person uploader = personRepository.findFirstByUsername(authentication.getName())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            // Assign the authenticated user as the uploader of the post
+            Post post = new Post(requestPostBody, uploader);
+            logger.debug(post.toString());
+
+            // Save the post
+            Post savedPost = postRepository.save(post);
+            logger.debug(savedPost.toString());
+
+            // Create a PostPreview object from the saved post
+            PostPreview postPreview = new PostPreview(
+                    savedPost.getId(),
+                    savedPost.getImage(),
+                    0L,
+                    0L
+            );
+
+            // Return ResponseEntity with the created PostPreview object
+            return ResponseEntity.status(201).body(postPreview);
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            // Log the exception
+            logger.error("Error occurred while creating a post: " + e.getMessage());
+            // Return ResponseEntity with an error message
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(gson.toJson("An error occurred while creating the post."));
+        }
+    }
+
+    @Transactional
+    @DeleteMapping("{postId}")
+    public ResponseEntity<String> deletePost(@PathVariable Long postId, Authentication authentication) {
+        try {
+            // Obtain authenticated user's information
+            String authenticatedUsername = authentication.getName();
+
+            // Retrieve the post from the database using its ID
+            Post post = postRepository
+                    .findById(postId)
+                    .orElseThrow(() -> new PostNotFoundException("Post not found"));
+            logger.debug(post.toString());
+
+            // Check if the authenticated user is the uploader of the post
+            if (!post.getUploader().getUsername().equals(authenticatedUsername)) {
+                return ResponseEntity
+                        .status(HttpStatus.FORBIDDEN)
+                        .body(gson.toJson("You are not authorized to delete this post"));
+            }
+            logger.debug(post.toString());
+            postRepository.deleteLikesByPostId(postId);
+            // If the authenticated user is the uploader, delete the post
+            postRepository.delete(post);
+
+            // Return success response
+            return ResponseEntity.status(HttpStatus.OK).body(gson.toJson("Post deleted successfully"));
+        } catch (PostNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(gson.toJson(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(gson.toJson("An error occurred while deleting the post"));
+        }
+    }
+
+    // Define PostNotFoundException as a static inner class
+    static class PostNotFoundException extends RuntimeException {
+        public PostNotFoundException(String message) {
+            super(message);
         }
     }
 }

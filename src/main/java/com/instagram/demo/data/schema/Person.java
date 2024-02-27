@@ -58,13 +58,13 @@ public class Person {
     @Size(max = 140)
     private String bio;
 
-    @OneToMany(mappedBy = "uploader")
+    @OneToMany(mappedBy = "uploader", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Post> uploads;
 
     @ManyToMany(fetch = EAGER)
     private Set<Post> likedPosts;
 
-    @OneToMany(mappedBy = "author")
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> comments;
 
     @ManyToMany

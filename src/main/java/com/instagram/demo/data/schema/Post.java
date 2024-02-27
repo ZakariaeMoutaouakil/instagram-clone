@@ -1,5 +1,6 @@
 package com.instagram.demo.data.schema;
 
+import com.instagram.demo.controller.ui.post.RequestPostBody;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -30,15 +32,12 @@ public class Post {
     @Size(max = 140)
     private String description;
 
-//    private Long numberOfLikes;
-
     @ElementCollection
     @Size(max = 5)
     private Set<String> hashtags;
 
     @NotNull
     @NotEmpty
-//    @Column(unique = true)
     private String image;
 
     @NotNull
@@ -52,8 +51,18 @@ public class Post {
     @ManyToMany(mappedBy = "likedPosts")
     private Set<Person> likers;
 
-    @OneToMany(mappedBy = "post")
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> comments;
+
+    public Post(RequestPostBody requestPostBody, Person uploader) {
+        this.description = requestPostBody.description();
+        this.hashtags = Set.of(requestPostBody.hashtags());
+        this.image = requestPostBody.image();
+        this.date = LocalDateTime.now();
+        this.uploader = uploader;
+        this.likers = new HashSet<>();
+        this.comments = new HashSet<>();
+    }
 
     @Override
     public int hashCode() {
