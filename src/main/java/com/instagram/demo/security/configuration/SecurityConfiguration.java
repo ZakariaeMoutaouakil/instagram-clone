@@ -24,10 +24,18 @@ import java.util.List;
 
 @Configuration
 public class SecurityConfiguration {
+
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         CsrfTokenRequestAttributeHandler csrfTokenRequestAttributeHandler = new CsrfTokenRequestAttributeHandler();
         csrfTokenRequestAttributeHandler.setCsrfRequestAttributeName("_csrf");
+
+        CookieCsrfTokenRepository cookieCsrfTokenRepository = new CookieCsrfTokenRepository();
+        cookieCsrfTokenRepository.setCookieCustomizer(cookie -> {
+            cookie.secure(true);
+            cookie.httpOnly(false);
+        });
 
         return httpSecurity
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -36,7 +44,7 @@ public class SecurityConfiguration {
                                 new AntPathRequestMatcher("/persons", HttpMethod.POST.name())
                         )
                         .csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRepository(cookieCsrfTokenRepository)
                 )
                 .cors(c -> {
                     CorsConfigurationSource source = request -> {
