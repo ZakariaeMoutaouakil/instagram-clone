@@ -1,4 +1,4 @@
-package com.instagram.demo.controller.auth;
+package com.instagram.demo.controller.ui.person;
 
 /**
  * Represents the credentials for registering a new user.

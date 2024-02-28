@@ -21,8 +21,7 @@ import java.util.logging.Logger;
 public class JWTTokenGeneratorFilter extends OncePerRequestFilter {
     public static final String JWT_KEY = "jxgEQeXHuPq8VdbyYFNkANdudQ53YUn4";
     public static final String JWT_COOKIE_NAME = "jwt_token";
-
-    private final Logger LOG = Logger.getLogger(AuthoritiesLoggingAtFilter.class.getName());
+    private final Logger LOG = Logger.getLogger(JWTTokenGeneratorFilter.class.getName());
 
 
     @Override
@@ -31,8 +30,8 @@ public class JWTTokenGeneratorFilter extends OncePerRequestFilter {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null) {
             LOG.info("authentication: " + authentication.getName());
-//            LOG.info("authentication: " + authentication.getCredentials().toString());
             LOG.info("authentication: " + authentication.getAuthorities().toString());
+
             SecretKey key = Keys.hmacShaKeyFor(JWT_KEY.getBytes(StandardCharsets.UTF_8));
             String jwt = Jwts.builder()
                     .issuer("Eazy Bank")

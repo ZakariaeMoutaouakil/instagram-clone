@@ -20,39 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(path = "/", produces = "application/json")
 @AllArgsConstructor
 public class AuthController {
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-    private final PersonRepository personRepository;
-    private final PasswordEncoder passwordEncoder;
-
-    /**
-     * Endpoint for registering a new user.
-     * Saves the user details provided in the request body.
-     *
-     * @param registerUserCredentials User credentials provided in the request body.
-     * @return ResponseEntity containing the newly registered user if successful,
-     * or ResponseEntity with an error message if an exception occurs.
-     */
-    @PostMapping(path = "register")
-    public ResponseEntity<?> register(@RequestBody RegisterUserCredentials registerUserCredentials) {
-        try {
-            Person savedPerson = personRepository.save(new Person(
-                    registerUserCredentials.username(),
-                    registerUserCredentials.email(),
-                    passwordEncoder.encode(registerUserCredentials.password()),
-                    registerUserCredentials.firstname(),
-                    registerUserCredentials.lastname()
-            ));
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedPerson);
-        } catch (Exception e) {
-            // Log the exception
-            logger.error("Error occurred while registering user: " + e.getMessage());
-            // Return ResponseEntity with error message
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An error occurred while registering the user.");
-        }
-    }
-
+    private final Gson gson;
 
     /**
      * Endpoint for user login.
@@ -63,6 +31,6 @@ public class AuthController {
      */
     @GetMapping("login")
     ResponseEntity<String> login(Authentication authentication) {
-        return new ResponseEntity<>(new Gson().toJson(authentication.getName()), HttpStatus.OK);
+        return new ResponseEntity<>(gson.toJson(authentication.getName()), HttpStatus.OK);
     }
 }

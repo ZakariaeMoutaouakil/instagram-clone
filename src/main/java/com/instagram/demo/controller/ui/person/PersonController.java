@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -21,7 +23,7 @@ import java.util.Optional;
 
 
 @RestController
-@RequestMapping(path = "/persons/", produces = "application/json")
+@RequestMapping(path = "/persons", produces = "application/json")
 @AllArgsConstructor
 public class PersonController {
     /**
@@ -39,11 +41,14 @@ public class PersonController {
      */
     private final PersonRepository personRepository;
 
-//    private final ModelMapper modelMapper;
-
     private final Gson gson;
 
-    @GetMapping("suggestions")
+    private final PasswordEncoder passwordEncoder;
+
+    private final PersonMapper personMapper;
+
+
+    @GetMapping("/suggestions")
     List<PersonSuggestion> personSuggestions(Authentication authentication) {
         return personRepository.findThreeRandomUsersNotFollowedByUser(authentication.getName());
     }
@@ -55,7 +60,7 @@ public class PersonController {
      * @param username The username of the person to retrieve information for.
      * @return A JSON object containing information about the person.
      */
-    @GetMapping("info/{username}")
+    @GetMapping("/info/{username}")
     Optional<String> personBio(@PathVariable String username, Authentication authentication) {
         return personRepository.findByUsername(username)
                 .map(projection -> {
@@ -74,7 +79,7 @@ public class PersonController {
                 });
     }
 
-    @GetMapping("stats/{username}")
+    @GetMapping("/stats/{username}")
     HashMap<String, Long> personStats(@PathVariable String username) {
         HashMap<String, Long> hashMap = new HashMap<>();
         hashMap.put("followers", personRepository.countFollowersByUsername(username));
@@ -84,7 +89,7 @@ public class PersonController {
     }
 
     @Transactional
-    @PostMapping("follow/{username}")
+    @PostMapping("/follow/{username}")
     public ResponseEntity<String> followPerson(@PathVariable String username, Authentication authentication) {
         Optional<Person> loggedInUserOptional = personRepository
                 .findFirstByUsername(authentication.getName());
@@ -98,7 +103,7 @@ public class PersonController {
             if (loggedInUser.equals(targetUser)) {
                 return ResponseEntity
                         .badRequest()
-                        .body(new Gson().toJson("You cannot follow yourself."));
+                        .body(gson.toJson("You cannot follow yourself."));
             }
 
             if (loggedInUser.getFollowees().contains(targetUser)) {
@@ -119,12 +124,84 @@ public class PersonController {
                 personRepository.save(targetUser);
 
                 return new ResponseEntity<>(
-                        new Gson().toJson("Followship created succesfully"),
+                        gson.toJson("Followship created succesfully"),
                         HttpStatus.CREATED
                 );
             }
         } else {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Endpoint for registering a new user.
+     * Saves the user details provided in the request body.
+     *
+     * @param registerUserCredentials User credentials provided in the request body.
+     * @return ResponseEntity containing the newly registered user if successful,
+     * or ResponseEntity with an error message if an exception occurs.
+     */
+    @PostMapping(path = "")
+    public ResponseEntity<?> register(@RequestBody RegisterUserCredentials registerUserCredentials) {
+        try {
+            Person savedPerson = personRepository.save(new Person(
+                    registerUserCredentials.username(),
+                    registerUserCredentials.email(),
+                    passwordEncoder.encode(registerUserCredentials.password()),
+                    registerUserCredentials.firstname(),
+                    registerUserCredentials.lastname()
+            ));
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedPerson);
+        } catch (Exception e) {
+            // Log the exception
+            logger.error("Error occurred while registering user: " + e.getMessage());
+            // Return ResponseEntity with error message
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while registering the user.");
+        }
+    }
+
+    @PutMapping("")
+    public ResponseEntity<String> updateUser(@RequestBody EditUserRequestBody request,
+                                             Authentication authentication) {
+        try {
+            // Obtain authenticated user's information
+            String authenticatedUsername = authentication.getName();
+
+            // Find the user in the database by username
+            Person existingUser = personRepository
+                    .findFirstByUsername(authenticatedUsername)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            // Check if the authenticated user is the same as the user being edited
+            if (!existingUser.getUsername().equals(request.username())) {
+                return ResponseEntity
+                        .status(HttpStatus.FORBIDDEN)
+                        .body("You are not authorized to edit this user");
+            }
+
+            // Map the request body to the Person entity
+            Person updatedUser = personMapper.mapToEntity(request);
+
+            // Update the existing user with the new details
+            existingUser.setPhoto(updatedUser.getPhoto());
+            existingUser.setEmail(updatedUser.getEmail());
+            existingUser.setFirstname(updatedUser.getFirstname());
+            existingUser.setLastname(updatedUser.getLastname());
+            existingUser.setBio(updatedUser.getBio());
+
+            // Save the updated user
+            personRepository.save(existingUser);
+
+            // Return success response
+            return ResponseEntity.ok("User updated successfully");
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while updating the user");
         }
     }
 }
