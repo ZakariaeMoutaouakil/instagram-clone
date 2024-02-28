@@ -21,7 +21,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-
+/**
+ * REST controller for managing person-related endpoints.
+ * Handles HTTP requests related to persons and produces JSON responses.
+ */
 @RestController
 @RequestMapping(path = "/persons", produces = "application/json")
 @AllArgsConstructor
@@ -41,12 +44,15 @@ public class PersonController {
      */
     private final PersonRepository personRepository;
 
+    /**
+     * Gson instance for JSON serialization and deserialization.
+     */
     private final Gson gson;
 
+    /**
+     * PasswordEncoder instance for encoding and verifying passwords.
+     */
     private final PasswordEncoder passwordEncoder;
-
-    private final PersonMapper personMapper;
-
 
     @GetMapping("/suggestions")
     List<PersonSuggestion> personSuggestions(Authentication authentication) {
@@ -79,6 +85,12 @@ public class PersonController {
                 });
     }
 
+    /**
+     * Retrieves statistics of a person including the number of followers, followings, and posts.
+     *
+     * @param username The username of the person to retrieve statistics for.
+     * @return A HashMap containing the statistics with keys "followers", "followings", and "posts".
+     */
     @GetMapping("/stats/{username}")
     HashMap<String, Long> personStats(@PathVariable String username) {
         HashMap<String, Long> hashMap = new HashMap<>();
@@ -88,6 +100,13 @@ public class PersonController {
         return hashMap;
     }
 
+    /**
+     * Follows or unfollows a person based on the provided username.
+     *
+     * @param username       The username of the person to follow or unfollow.
+     * @param authentication The authentication object containing details about the currently logged-in user.
+     * @return A ResponseEntity indicating the success or failure of the follow action.
+     */
     @Transactional
     @PostMapping("/follow/{username}")
     public ResponseEntity<String> followPerson(@PathVariable String username, Authentication authentication) {
@@ -114,7 +133,7 @@ public class PersonController {
                 personRepository.save(loggedInUser);
                 personRepository.save(targetUser);
 
-                return ResponseEntity.ok(new Gson().toJson("Followship removed succesfully"));
+                return ResponseEntity.ok(gson.toJson("Followship removed successfully"));
             } else {
                 // If not following, then follow
                 loggedInUser.getFollowees().add(targetUser);
@@ -124,7 +143,7 @@ public class PersonController {
                 personRepository.save(targetUser);
 
                 return new ResponseEntity<>(
-                        gson.toJson("Followship created succesfully"),
+                        gson.toJson("Followship created successfully"),
                         HttpStatus.CREATED
                 );
             }
@@ -141,7 +160,7 @@ public class PersonController {
      * @return ResponseEntity containing the newly registered user if successful,
      * or ResponseEntity with an error message if an exception occurs.
      */
-    @PostMapping(path = "")
+    @PostMapping(path = "", consumes = "application/json")
     public ResponseEntity<?> register(@RequestBody RegisterUserCredentials registerUserCredentials) {
         try {
             Person savedPerson = personRepository.save(new Person(
@@ -158,50 +177,100 @@ public class PersonController {
             // Return ResponseEntity with error message
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An error occurred while registering the user.");
+                    .body(gson.toJson("An error occurred while registering the user"));
         }
     }
 
-    @PutMapping("")
-    public ResponseEntity<String> updateUser(@RequestBody EditUserRequestBody request,
+    /**
+     * Updates the details of the authenticated user.
+     *
+     * @param editUserRequestBody The request body containing the updated user information.
+     * @param authentication      The authentication object containing details about the current user.
+     * @return A ResponseEntity containing a success message if the update is successful,
+     * or an error message if the update fails or the user is not found.
+     */
+    @PutMapping(path = "", consumes = "application/json")
+    public ResponseEntity<String> updateUser(@RequestBody EditUserRequestBody editUserRequestBody,
                                              Authentication authentication) {
         try {
             // Obtain authenticated user's information
             String authenticatedUsername = authentication.getName();
 
             // Find the user in the database by username
-            Person existingUser = personRepository
+            Person authenticatedUser = personRepository
                     .findFirstByUsername(authenticatedUsername)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+            logger.debug(authenticatedUser.toString());
+            Optional<Person> unavailableUser = personRepository
+                    .findFirstByUsername(editUserRequestBody.username());
+
             // Check if the authenticated user is the same as the user being edited
-            if (!existingUser.getUsername().equals(request.username())) {
+            if (unavailableUser.isPresent()
+                    && !unavailableUser.get().getUsername().equals(authenticatedUsername)) {
+                logger.debug(unavailableUser.toString());
                 return ResponseEntity
                         .status(HttpStatus.FORBIDDEN)
-                        .body("You are not authorized to edit this user");
+                        .body(gson.toJson("The username is already taken by another user"));
             }
 
-            // Map the request body to the Person entity
-            Person updatedUser = personMapper.mapToEntity(request);
-
             // Update the existing user with the new details
-            existingUser.setPhoto(updatedUser.getPhoto());
-            existingUser.setEmail(updatedUser.getEmail());
-            existingUser.setFirstname(updatedUser.getFirstname());
-            existingUser.setLastname(updatedUser.getLastname());
-            existingUser.setBio(updatedUser.getBio());
+            authenticatedUser.setUsername(editUserRequestBody.username());
+            authenticatedUser.setPhoto(editUserRequestBody.photo());
+            authenticatedUser.setEmail(editUserRequestBody.email());
+            authenticatedUser.setFirstname(editUserRequestBody.firstname());
+            authenticatedUser.setLastname(editUserRequestBody.lastname());
+            authenticatedUser.setBio(editUserRequestBody.bio());
 
+            logger.debug(authenticatedUser.toString());
             // Save the updated user
-            personRepository.save(existingUser);
+            personRepository.save(authenticatedUser);
 
             // Return success response
-            return ResponseEntity.ok("User updated successfully");
+            return ResponseEntity.ok(gson.toJson(gson.toJson("User updated successfully")));
         } catch (UsernameNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(gson.toJson(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An error occurred while updating the user");
+                    .body(gson.toJson("An error occurred while updating the user"));
+        }
+    }
+
+    /**
+     * Deletes a person from the system along with their related data, including followers, followees, and liked posts.
+     * This operation requires authentication, and only the authenticated user can delete their own account.
+     *
+     * @param authentication The authentication object containing details about the current user.
+     * @return A ResponseEntity containing a success message if the deletion is successful,
+     * or an error message if the deletion fails or the user is not found.
+     */
+    @Transactional
+    @DeleteMapping("")
+    public ResponseEntity<String> deletePerson(Authentication authentication) {
+        try {
+            // Retrieve authenticated username
+            String authenticatedUsername = authentication.getName();
+
+            // Find the person by username
+            Person person = personRepository
+                    .findFirstByUsername(authenticatedUsername)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            // Delete the person
+            personRepository.deleteFolloweesAndFollowersById(person.getId());
+            personRepository.deleteLikesById(person.getId());
+            personRepository.delete(person);
+
+            // Return success response
+            return ResponseEntity.ok(gson.toJson("Person deleted successfully"));
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(gson.toJson(e.getMessage()));
+        } catch (Exception e) {
+            // Return error response if deletion fails
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(gson.toJson("An error occurred while deleting the person"));
         }
     }
 }

@@ -4,6 +4,8 @@ import com.instagram.demo.data.projection.person.PersonFeed;
 import com.instagram.demo.data.projection.person.PersonProjection;
 import com.instagram.demo.data.projection.person.PersonSuggestion;
 import com.instagram.demo.data.schema.Person;
+import jakarta.transaction.Transactional;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -92,5 +94,30 @@ public interface PersonRepository extends CrudRepository<Person, Long> {
             "FROM Person f " +
             "JOIN f.followers u " +
             "WHERE u.username = :followerUsername AND f.username = :followeeUsername")
-    boolean isFollowing(@Param("followerUsername") String followerUsername, @Param("followeeUsername") String followeeUsername);
+    boolean isFollowing(
+            @Param("followerUsername") String followerUsername,
+            @Param("followeeUsername") String followeeUsername
+    );
+
+    /**
+     * Deletes rows from the "person_liked_posts" table where the "likers_id" column matches the provided ID.
+     * This method is transactional and modifies the database.
+     *
+     * @param id The ID of the likers whose rows are to be deleted.
+     */
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM person_liked_posts WHERE likers_id = :likersId", nativeQuery = true)
+    void deleteLikesById(@Param("likersId") Long id);
+
+    /**
+     * Deletes rows from the "person_followers" table where the "followees_id" or "followers_id" column matches the provided ID.
+     * This method is transactional and modifies the database.
+     *
+     * @param id The ID of the person whose followers and followees are to be deleted.
+     */
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM person_followers WHERE followees_id = :id OR followers_id = :id", nativeQuery = true)
+    void deleteFolloweesAndFollowersById(@Param("id") Long id);
 }
