@@ -26,7 +26,7 @@ import java.util.Optional;
  * Handles HTTP requests related to persons and produces JSON responses.
  */
 @RestController
-@RequestMapping(path = "/persons", produces = "application/json")
+@RequestMapping(path = "/persons/", produces = "application/json")
 @AllArgsConstructor
 public class PersonController {
     /**
@@ -54,7 +54,7 @@ public class PersonController {
      */
     private final PasswordEncoder passwordEncoder;
 
-    @GetMapping("/suggestions")
+    @GetMapping("suggestions")
     List<PersonSuggestion> personSuggestions(Authentication authentication) {
         return personRepository.findThreeRandomUsersNotFollowedByUser(authentication.getName());
     }
@@ -66,7 +66,7 @@ public class PersonController {
      * @param username The username of the person to retrieve information for.
      * @return A JSON object containing information about the person.
      */
-    @GetMapping("/info/{username}")
+    @GetMapping("info/{username}")
     Optional<String> personBio(@PathVariable String username, Authentication authentication) {
         return personRepository.findByUsername(username)
                 .map(projection -> {
@@ -91,7 +91,7 @@ public class PersonController {
      * @param username The username of the person to retrieve statistics for.
      * @return A HashMap containing the statistics with keys "followers", "followings", and "posts".
      */
-    @GetMapping("/stats/{username}")
+    @GetMapping("stats/{username}")
     HashMap<String, Long> personStats(@PathVariable String username) {
         HashMap<String, Long> hashMap = new HashMap<>();
         hashMap.put("followers", personRepository.countFollowersByUsername(username));
@@ -108,7 +108,7 @@ public class PersonController {
      * @return A ResponseEntity indicating the success or failure of the follow action.
      */
     @Transactional
-    @PostMapping("/follow/{username}")
+    @PostMapping("follow/{username}")
     public ResponseEntity<String> followPerson(@PathVariable String username, Authentication authentication) {
         Optional<Person> loggedInUserOptional = personRepository
                 .findFirstByUsername(authentication.getName());
@@ -251,6 +251,7 @@ public class PersonController {
         try {
             // Retrieve authenticated username
             String authenticatedUsername = authentication.getName();
+            logger.debug(authenticatedUsername);
 
             // Find the person by username
             Person person = personRepository

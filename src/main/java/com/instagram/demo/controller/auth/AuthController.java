@@ -30,4 +30,9 @@ public class AuthController {
     ResponseEntity<String> login(Authentication authentication) {
         return new ResponseEntity<>(gson.toJson(authentication.getName()), HttpStatus.OK);
     }
+
+    @GetMapping("test")
+    ResponseEntity<String> testCookie(Authentication authentication) {
+        return new ResponseEntity<>(gson.toJson(authentication.getName()), HttpStatus.OK);
+    }
 }

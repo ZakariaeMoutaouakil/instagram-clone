@@ -44,7 +44,7 @@ public class SecurityConfiguration {
                 .addFilterBefore(new JWTTokenValidatorFilter(), BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(
                         (requests) -> requests
-                                .requestMatchers("/persons")
+                                .requestMatchers("/persons/")
                                 .permitAll()
                                 .requestMatchers("**")
                                 .authenticated()
